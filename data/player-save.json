@@ -1,0 +1,19 @@
+{
+    "Name":  "admin",
+    "Rank":  "Junior Operator",
+    "Level":  2,
+    "XP":  60,
+    "Credits":  77,
+    "Health":  100,
+    "Reputation":  20,
+    "MissionsCompleted":  [
+                              "First Login",
+                              "Port Scan Simulation"
+                          ],
+    "ToolsUnlocked":  [
+                          "Basic Terminal"
+                      ],
+    "Achievements":  [
+
+                     ]
+}
