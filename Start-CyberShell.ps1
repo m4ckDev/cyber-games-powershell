@@ -6,6 +6,8 @@ $ErrorActionPreference = "Stop"
 . "$PSScriptRoot/engine/MissionCatalog.ps1"
 . "$PSScriptRoot/engine/QuestionBank.ps1"
 . "$PSScriptRoot/engine/GameSystems.ps1"
+. "$PSScriptRoot/engine/HolocronAcademy.ps1"
+. "$PSScriptRoot/engine/JediArchives.ps1"
 
 function Show-MainMenu {
     param([object]$Profile)
@@ -17,8 +19,9 @@ function Show-MainMenu {
     Write-Host ""
     Write-BoxLine
     Write-BoxText -Text "TRAINING PATHS" -Color Cyan
-    Write-BoxText -Text "[1] Windows Light Path, PowerShell and Windows fundamentals"
-    Write-BoxText -Text "[2] Linux Shadow Path, terminal and Linux fundamentals"
+    Write-BoxText -Text "[1] Holocron Academy, walkthrough lessons"
+    Write-BoxText -Text "[2] Windows Light Path, PowerShell and Windows fundamentals"
+    Write-BoxText -Text "[3] Linux Shadow Path, terminal and Linux fundamentals"
     Write-BoxEnd
 
     Write-Host ""
@@ -98,9 +101,12 @@ while ($Running) {
 
     switch ($menuChoice) {
         "1" {
-            $CurrentProfile = Start-TrainingTrack -Profile $CurrentProfile -Track "Windows"
+            $CurrentProfile = Show-HolocronAcademy -Profile $CurrentProfile
         }
         "2" {
+            $CurrentProfile = Start-TrainingTrack -Profile $CurrentProfile -Track "Windows"
+        }
+        "3" {
             $CurrentProfile = Start-TrainingTrack -Profile $CurrentProfile -Track "Linux"
         }
         "3" {

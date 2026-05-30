@@ -191,3 +191,65 @@ function Repair-CyberProfile {
 
     return $Profile
 }
+
+
+
+function Repair-CyberProfileSafe {
+    param([object]$Profile)
+
+    $props = @($Profile.PSObject.Properties.Name)
+
+    if ($props -notcontains "CompletedMissions") {
+        $Profile | Add-Member -NotePropertyName CompletedMissions -NotePropertyValue @() -Force
+    }
+
+    if ($props -notcontains "Badges") {
+        $Profile | Add-Member -NotePropertyName Badges -NotePropertyValue @() -Force
+    }
+
+    if ($props -notcontains "WindowsXP") {
+        $Profile | Add-Member -NotePropertyName WindowsXP -NotePropertyValue 0 -Force
+    }
+
+    if ($props -notcontains "LinuxXP") {
+        $Profile | Add-Member -NotePropertyName LinuxXP -NotePropertyValue 0 -Force
+    }
+
+    if ($props -notcontains "TotalXP") {
+        $Profile | Add-Member -NotePropertyName TotalXP -NotePropertyValue 0 -Force
+    }
+
+    if ($props -notcontains "CurrentStreak") {
+        $Profile | Add-Member -NotePropertyName CurrentStreak -NotePropertyValue 0 -Force
+    }
+
+    if ($props -notcontains "BestStreak") {
+        $Profile | Add-Member -NotePropertyName BestStreak -NotePropertyValue 0 -Force
+    }
+
+    if ($props -notcontains "LastDailyDate") {
+        $Profile | Add-Member -NotePropertyName LastDailyDate -NotePropertyValue "" -Force
+    }
+
+    if ($props -notcontains "PlacementComplete") {
+        $Profile | Add-Member -NotePropertyName PlacementComplete -NotePropertyValue $false -Force
+    }
+
+    if ($null -eq $Profile.CompletedMissions) {
+        $Profile.CompletedMissions = @()
+    }
+
+    if ($Profile.CompletedMissions -isnot [System.Array]) {
+        $Profile.CompletedMissions = @($Profile.CompletedMissions)
+    }
+
+    if ($null -eq $Profile.Badges) {
+        $Profile.Badges = @()
+    }
+
+    if ($Profile.Badges -isnot [System.Array]) {
+        $Profile.Badges = @($Profile.Badges)
+    }
+
+    return $Profile
+}
