@@ -1,129 +1,159 @@
-# CyberShell: Terminal Ops
-# Main launcher script
+$ErrorActionPreference = "Stop"
 
-. (Join-Path $PSScriptRoot "engine/UI.ps1")
-. (Join-Path $PSScriptRoot "engine/PlayerSystem.ps1")
-. (Join-Path $PSScriptRoot "engine/SaveSystem.ps1")
-. (Join-Path $PSScriptRoot "engine/MissionSystem.ps1")
-. (Join-Path $PSScriptRoot "engine/LeaderboardSystem.ps1")
-. (Join-Path $PSScriptRoot "engine/CommandTrainingSystem.ps1")
+. "$PSScriptRoot/engine/CyberTheme.ps1"
+. "$PSScriptRoot/engine/RankSystem.ps1"
+. "$PSScriptRoot/engine/ProfileSystem.ps1"
+. "$PSScriptRoot/engine/MissionCatalog.ps1"
+. "$PSScriptRoot/engine/QuestionBank.ps1"
+. "$PSScriptRoot/engine/GameSystems.ps1"
 
-$Host.UI.RawUI.WindowTitle = "CyberShell: Terminal Ops"
+function Show-MainMenu {
+    param([object]$Profile)
 
-function Initialize-Game {
-    Show-StartupSequence
+    Write-CyberHeader -Title "CYBERSHELL ACADEMY" -Subtitle "Command-line cyber training RPG, public-test build" -Theme "Neutral"
 
-    $saveLoaded = Load-Player
+    Show-OperatorStatus -Profile $Profile
 
-    if ($saveLoaded -eq $false) {
-        Write-Host ""
-        Write-Host "No operator profile found." -ForegroundColor Yellow
-        Pause-Game
-        New-Player
-    }
-    else {
-        Write-Host ""
-        Write-Host "Operator profile loaded: $($Global:Player.Name)" -ForegroundColor Green
-        Start-Sleep -Milliseconds 600
+    Write-Host ""
+    Write-BoxLine
+    Write-BoxText -Text "TRAINING PATHS" -Color Cyan
+    Write-BoxText -Text "[1] Windows Light Path, PowerShell and Windows fundamentals"
+    Write-BoxText -Text "[2] Linux Shadow Path, terminal and Linux fundamentals"
+    Write-BoxEnd
+
+    Write-Host ""
+    Write-BoxLine
+    Write-BoxText -Text "OPERATOR SYSTEMS" -Color Yellow
+    Write-BoxText -Text "[3] Placement Test        [4] Boss Trials"
+    Write-BoxText -Text "[5] Skill Tree            [6] Daily Challenge"
+    Write-BoxText -Text "[7] Badges                [8] Leaderboard"
+    Write-BoxText -Text "[9] Switch Profile        [S] Speed Round"
+    Write-BoxText -Text "[0] Exit and Save"
+    Write-BoxEnd
+    Write-Host ""
+}
+
+function Start-TrainingTrack {
+    param(
+        [object]$Profile,
+        [string]$Track
+    )
+
+    while ($true) {
+        Show-Missions -Track $Track -Profile $Profile
+        $choice = Read-Menu -Prompt "Mission"
+
+        if ($choice -match '^[Bb]$') {
+            return $Profile
+        }
+
+        $Profile = Start-Mission -Profile $Profile -MissionID $choice.ToUpper()
     }
 }
 
-function Show-MainMenu {
-    while ($true) {
-        Show-Banner
-        Show-MiniStatusBar
+function Start-BossTrialMenu {
+    param([object]$Profile)
 
-        Show-MenuTitle "MAIN MENU"
+    Write-CyberHeader -Title "BOSS TRIALS" -Subtitle "Choose a path trial" -Theme "Neutral"
 
-        Show-MenuOption "1" "Start Missions"
-        Show-MenuOption "2" "Operator Profile"
-        Show-MenuOption "3" "Leaderboard"
-        Show-MenuOption "4" "CLI Training Grounds"
-        Show-MenuOption "5" "Save Game"
-        Show-MenuOption "6" "Reset Save"
-        Show-MenuOption "7" "Reset Leaderboard"
-        Show-MenuOption "8" "Exit"
+    Write-MenuOption -Key "1" -Text "Windows Boss Trial" -Color Cyan
+    Write-MenuOption -Key "2" -Text "Linux Boss Trial" -Color Red
+    Write-MenuOption -Key "B" -Text "Back" -Color DarkGray
 
-        Show-MenuFooter
+    $choice = Read-Menu -Prompt "Choose"
 
-        $choice = Read-Host "Select an option"
+    switch ($choice) {
+        "1" { return Start-BossTrial -Profile $Profile -Track "Windows" }
+        "2" { return Start-BossTrial -Profile $Profile -Track "Linux" }
+        default { return $Profile }
+    }
+}
 
-        switch ($choice) {
-            "1" {
-                Show-MissionMenu
-            }
 
-            "2" {
-                Show-PlayerProfile
-            }
+function Start-SpeedRoundMenu {
+    param([object]$Profile)
 
-            "3" {
-                Show-Leaderboard
-            }
+    Write-CyberHeader -Title "SPEED ROUND" -Subtitle "Choose a randomized speed challenge path" -Theme "Neutral"
 
-            "4" {
-                Show-CLITrainingMenu
-            }
+    Write-MenuOption -Key "1" -Text "Windows Speed Round" -Color Cyan
+    Write-MenuOption -Key "2" -Text "Linux Speed Round" -Color Red
+    Write-MenuOption -Key "B" -Text "Back" -Color DarkGray
 
-            "5" {
-                Save-Player
+    $choice = Read-Menu -Prompt "Choose"
 
-                if (Get-Command Submit-LeaderboardScore -ErrorAction SilentlyContinue) {
-                    Submit-LeaderboardScore
-                }
+    switch ($choice) {
+        "1" { return Start-SpeedRound -Profile $Profile -Track "Windows" }
+        "2" { return Start-SpeedRound -Profile $Profile -Track "Linux" }
+        default { return $Profile }
+    }
+}
 
-                Pause-Game
-            }
 
-            "6" {
-                $confirm = Read-Host "Type RESET to delete your save"
+$CurrentProfile = Select-CyberProfile
+$Running = $true
 
-                if ($confirm -eq "RESET") {
-                    Reset-Save
-                    Pause-Game
-                    Initialize-Game
-                }
-                else {
-                    Write-Host "Reset cancelled." -ForegroundColor Yellow
-                    Pause-Game
-                }
-            }
+while ($Running) {
+    Show-MainMenu -Profile $CurrentProfile
+    $menuChoice = Read-Menu -Prompt "Choose"
 
-            "7" {
-                $confirm = Read-Host "Type RESETBOARD to delete leaderboard scores"
+    switch ($menuChoice) {
+        "1" {
+            $CurrentProfile = Start-TrainingTrack -Profile $CurrentProfile -Track "Windows"
+        }
+        "2" {
+            $CurrentProfile = Start-TrainingTrack -Profile $CurrentProfile -Track "Linux"
+        }
+        "3" {
+            $CurrentProfile = Start-PlacementTest -Profile $CurrentProfile
+        }
+        "4" {
+            $CurrentProfile = Start-BossTrialMenu -Profile $CurrentProfile
+        }
+        "5" {
+            Show-SkillTree -Profile $CurrentProfile
+        }
+        "6" {
+            $CurrentProfile = Start-DailyChallenge -Profile $CurrentProfile
+        }
+        "7" {
+            Show-Badges -Profile $CurrentProfile
+        }
+        "8" {
+            Show-Leaderboard
+        }
+        "9" {
+            
+function Start-SpeedRoundMenu {
+    param([object]$Profile)
 
-                if ($confirm -eq "RESETBOARD") {
-                    Reset-Leaderboard
-                    Pause-Game
-                }
-                else {
-                    Write-Host "Leaderboard reset cancelled." -ForegroundColor Yellow
-                    Pause-Game
-                }
-            }
+    Write-CyberHeader -Title "SPEED ROUND" -Subtitle "Choose a randomized speed challenge path" -Theme "Neutral"
 
-            "8" {
-                Save-Player
+    Write-MenuOption -Key "1" -Text "Windows Speed Round" -Color Cyan
+    Write-MenuOption -Key "2" -Text "Linux Speed Round" -Color Red
+    Write-MenuOption -Key "B" -Text "Back" -Color DarkGray
 
-                if (Get-Command Submit-LeaderboardScore -ErrorAction SilentlyContinue) {
-                    Submit-LeaderboardScore
-                }
+    $choice = Read-Menu -Prompt "Choose"
 
-                Write-Host ""
-                Write-Host "Disconnecting from CyberShell..." -ForegroundColor DarkGray
-                Start-Sleep -Milliseconds 700
-                Clear-Host
-                exit
-            }
+    switch ($choice) {
+        "1" { return Start-SpeedRound -Profile $Profile -Track "Windows" }
+        "2" { return Start-SpeedRound -Profile $Profile -Track "Linux" }
+        default { return $Profile }
+    }
+}
 
-            default {
-                Write-Host ""
-                Write-Host "Invalid option. The machine weeps quietly." -ForegroundColor Red
-                Pause-Game
-            }
+
+$CurrentProfile = Select-CyberProfile
+        }
+        "0" {
+            Update-CyberProfile -Profile $CurrentProfile
+            Clear-Host
+            Write-Host "Operator progress saved." -ForegroundColor Green
+            Write-Host "Exiting CyberShell Academy."
+            $Running = $false
+        }
+        default {
+            Write-Host "Invalid selection." -ForegroundColor Red
+            Start-Sleep -Seconds 1
         }
     }
 }
-
-Initialize-Game
-Show-MainMenu
